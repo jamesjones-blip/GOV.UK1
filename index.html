@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main role="main" id="content" class="govuk-main-wrapper">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-xl">Check your driving licence status</h1>
+            
+            <div id="search-section">
+                <p class="govuk-body">Enter a driving licence number or vehicle registration number to verify its status.</p>
+                
+                <div class="govuk-form-group" id="form-group">
+                    <label class="govuk-label" for="search-query">
+                        Licence number or Registration number
+                    </label>
+                    <div id="search-hint" class="govuk-hint">
+                        For example, 'ABCDE123456FGH78' or 'LD60 5XG'
+                    </div>
+                    <input class="govuk-input govuk-!-width-two-thirds" id="search-query" name="search-query" type="text" spellcheck="false" aria-describedby="search-hint">
+                </div>
+                
+                <button class="govuk-button" data-module="govuk-button" id="search-btn">
+                    Verify status
+                </button>
+
+                <div id="loading" class="govuk-body govuk-!-display-none">
+                    <span class="govuk-!-font-weight-bold">Searching database...</span>
+                </div>
+                
+                <div id="not-found" class="govuk-error-summary govuk-!-display-none" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+                    <h2 class="govuk-error-summary__title" id="error-summary-title">
+                        ✗ Not found
+                    </h2>
+                    <div class="govuk-error-summary__body">
+                        <p>No record was found for the details provided. Please check the number and try again.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results-section" class="govuk-!-display-none">
+                <div class="govuk-panel govuk-panel--confirmation" style="background-color: #00703c;">
+                    <h1 class="govuk-panel__title">
+                        ✓ Successful / Verified
+                    </h1>
+                    <div class="govuk-panel__body">
+                        Record found in DVLA systems
+                    </div>
+                </div>
+
+                <div class="govuk-tabs" data-module="govuk-tabs">
+                    <h2 class="govuk-tabs__title">Contents</h2>
+                    <ul class="govuk-tabs__list">
+                        <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
+                            <a class="govuk-tabs__tab" href="#personal-details">Personal details</a>
+                        </li>
+                        <li class="govuk-tabs__list-item">
+                            <a class="govuk-tabs__tab" href="#licence-status">Licence status</a>
+                        </li>
+                        <li class="govuk-tabs__list-item">
+                            <a class="govuk-tabs__tab" href="#document">Document</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="govuk-tabs__panel" id="personal-details">
+                        <h2 class="govuk-heading-l">Personal details</h2>
+                        <dl class="govuk-summary-list">
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Name</dt>
+                                <dd class="govuk-summary-list__value" id="res-name"></dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Address</dt>
+                                <dd class="govuk-summary-list__value" id="res-address"></dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Date of birth</dt>
+                                <dd class="govuk-summary-list__value" id="res-dob"></dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Licence number</dt>
+                                <dd class="govuk-summary-list__value" id="res-licence-num"></dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="licence-status">
+                        <h2 class="govuk-heading-l">Licence status</h2>
+                        <dl class="govuk-summary-list">
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Type</dt>
+                                <dd class="govuk-summary-list__value" id="res-type"></dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Valid until</dt>
+                                <dd class="govuk-summary-list__value" id="res-valid"></dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Categories</dt>
+                                <dd class="govuk-summary-list__value" id="res-categories"></dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Endorsements</dt>
+                                <dd class="govuk-summary-list__value" id="res-endorsements"></dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="document">
+                        <h2 class="govuk-heading-l">Soft copy of document</h2>
+                        <div id="res-doc-container">
+                            <p class="govuk-body">No document available.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="govuk-button govuk-button--secondary" id="new-search-btn">New search</button>
+            </div>
+            
+            <div class="govuk-inset-text">
+                <strong>Demo notice:</strong> This is a demo interface - not connected to DVLA systems.
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBtn = document.getElementById('search-btn');
+    const newSearchBtn = document.getElementById('new-search-btn');
+    const queryInput = document.getElementById('search-query');
+    const searchSection = document.getElementById('search-section');
+    const resultsSection = document.getElementById('results-section');
+    const loading = document.getElementById('loading');
+    const notFound = document.getElementById('not-found');
+
+    searchBtn.addEventListener('click', function() {
+        const query = queryInput.value.trim();
+        if (!query) return;
+
+        loading.classList.remove('govuk-!-display-none');
+        notFound.classList.add('govuk-!-display-none');
+        
+        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Not found');
+                return response.json();
+            })
+            .then(data => {
+                loading.classList.add('govuk-!-display-none');
+                
+                // Populate results
+                document.getElementById('res-name').textContent = data.full_name;
+                document.getElementById('res-address').textContent = data.address;
+                document.getElementById('res-dob').textContent = data.dob;
+                document.getElementById('res-licence-num').textContent = data.licence_number;
+                document.getElementById('res-type').textContent = data.licence_type;
+                document.getElementById('res-valid').textContent = data.valid_until;
+                document.getElementById('res-categories').textContent = data.vehicle_categories;
+                document.getElementById('res-endorsements').textContent = data.endorsements;
+
+                const docContainer = document.getElementById('res-doc-container');
+                if (data.document_file_path) {
+                    docContainer.innerHTML = `<a href="/uploads/${data.document_file_path}" class="govuk-link" target="_blank">View Soft Copy (PDF/Image)</a><br><br><img src="/uploads/${data.document_file_path}" style="max-width: 100%; border: 1px solid #b1b4b6;" onerror="this.style.display='none'">`;
+                } else {
+                    docContainer.innerHTML = '<p class="govuk-body">No document available.</p>';
+                }
+
+                searchSection.classList.add('govuk-!-display-none');
+                resultsSection.classList.remove('govuk-!-display-none');
+            })
+            .catch(error => {
+                loading.classList.add('govuk-!-display-none');
+                notFound.classList.remove('govuk-!-display-none');
+            });
+    });
+
+    newSearchBtn.addEventListener('click', function() {
+        queryInput.value = '';
+        searchSection.classList.remove('govuk-!-display-none');
+        resultsSection.classList.add('govuk-!-display-none');
+    });
+
+    // Simple Tab logic
+    const tabs = document.querySelectorAll('.govuk-tabs__tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            
+            // Update selected tab state
+            document.querySelectorAll('.govuk-tabs__list-item').forEach(li => li.classList.remove('govuk-tabs__list-item--selected'));
+            this.parentElement.classList.add('govuk-tabs__list-item--selected');
+            
+            // Update panels
+            document.querySelectorAll('.govuk-tabs__panel').forEach(panel => {
+                if (panel.id === targetId) {
+                    panel.classList.remove('govuk-tabs__panel--hidden');
+                } else {
+                    panel.classList.add('govuk-tabs__panel--hidden');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
